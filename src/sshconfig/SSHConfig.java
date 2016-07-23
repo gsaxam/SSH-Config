@@ -25,7 +25,8 @@ public class SSHConfig {
     final String sshConfigFile_ = new File(userHome, sshDir).toString();
     final String sshConfigFile = new File(sshConfigFile_, configFile).toString();
 
-    public void print(Object o) {
+
+    public static void print(Object o) {
         System.out.println(o.toString());
     }
 
@@ -56,10 +57,6 @@ public class SSHConfig {
         return stringArray;
     }
 
-    public void loadFileFromListIntoAMap(List<String> contents) {
-
-    }
-
     public String getHostName(String str) {
         String[] hostNameLine = str.split("/n");
         if (!hostNameLine[0].trim().startsWith("#")) {
@@ -74,7 +71,6 @@ public class SSHConfig {
     public Map<String, Object> getHostProperties(String str) {
         Map<String, Object> properties = new HashMap<>();
         String[] lines = str.split("\n");
-
         for (int i = 1; i < lines.length; i++) {
             String[] fields = lines[i].trim().split(" ");
 
@@ -85,29 +81,57 @@ public class SSHConfig {
             switch (fieldName.toLowerCase()) {
                 case "hostname":
                     properties.put("HostName", fields[1].trim());
+                    break;
                 case "port":
                     properties.put("Port", fields[1].trim());
+                    break;
                 case "user":
                     properties.put("User", fields[1].trim());
-                case "localforward":
-                    properties.put(fields[1].trim(), new PortForwarding("LocalForward", fields[1].trim(),fields[1].trim()));
-                    System.out.println(new PortForwarding("LocalForward", fields[1].trim(),fields[1].trim()).toString());
+                    break;
             }
         }
         return properties;
     }
 
-    public class PortForwarding {
-        private final String forwardType;
-        private final String localPort;
-        private final String destinationAddress;
+    public Map<Integer, String> getLocalForwarding(String str) {
+        Map<Integer, String> localForwardMap = new HashMap<>();
+        String[] lines = str.split("\n");
 
-        public PortForwarding(String forwardType, String localPort, String destinationAddress) {
-            this.forwardType = forwardType;
-            this.localPort = localPort;
-            this.destinationAddress = destinationAddress;
+        for (int i = 1; i < lines.length; i++) {
+            String[] fields = lines[i].trim().split(" ");
+
+            String fieldName = "";
+            if (fields.length != 0) {
+                fieldName = fields[0].trim();
+            }
+            switch (fieldName.toLowerCase()) {
+
+                case "localforward":
+                    localForwardMap.put(Integer.parseInt(fields[1].trim()), fields[2].trim());
+                    break;
+            }
         }
+        return localForwardMap;
+    }
 
+    public Map<Integer, String> getRemoteForwarding(String str) {
+        Map<Integer, String> remoteForwardMap = new HashMap<>();
+        String[] lines = str.split("\n");
+
+        for (int i = 1; i < lines.length; i++) {
+            String[] fields = lines[i].trim().split(" ");
+
+            String fieldName = "";
+            if (fields.length != 0) {
+                fieldName = fields[0].trim();
+            }
+            switch (fieldName.toLowerCase()) {
+
+                case "remoteforward":
+                    remoteForwardMap.put(Integer.parseInt(fields[1].trim()), fields[2].trim());
+            }
+        }
+        return remoteForwardMap;
     }
 
     public static void main(String[] args) throws IOException {
@@ -124,13 +148,24 @@ public class SSHConfig {
         Pattern r = Pattern.compile(pattern, Pattern.MULTILINE);
         Matcher m = r.matcher(fullString);
 
-        Map<String, Map<String, Object>> hostWithSections = new HashMap<>();
+        Config hostList = new Config();
         while (m.find()) {
             if (starter.getHostName(m.group(0)) != null) {
-                hostWithSections.put(starter.getHostName(m.group(0)), starter.getHostProperties(m.group(0)));
+                Map hostProperties = new HashMap(starter.getHostProperties(m.group(0)));
+
+                hostList.addHost(new Host(hostProperties.get("HostName").toString(),
+                        (hostProperties.containsKey("Port")) ? Integer.parseInt(hostProperties.get("Port").toString()) : -1,
+                        hostProperties.get("User").toString(),
+                        starter.getLocalForwarding(m.group(0)),
+                        starter.getRemoteForwarding(m.group(0)))
+                );
             }
         }
-        starter.print(hostWithSections);
+
+        starter.print(hostList.getAllHosts());
+        for (Host h : hostList.getAllHosts()) {
+            print(h.getLocalForward());
+        }
     }
 
 }
