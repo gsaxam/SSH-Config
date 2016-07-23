@@ -1,4 +1,4 @@
-package sshconfig;
+package SSHConfig;
 
 import java.util.ArrayList;
 import java.util.List;

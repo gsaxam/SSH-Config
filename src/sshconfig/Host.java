@@ -1,4 +1,4 @@
-package sshconfig;
+package SSHConfig;
 
 import java.util.Map;
 
@@ -6,18 +6,24 @@ import java.util.Map;
  * Created by saksham.ghimire on 7/22/16.
  */
 public class Host {
+    private String host;
     private String hostname;
     private int port;
     private String user;
     private Map localForward;
     private Map remoteForward;
 
-    public Host(String hostname, int port, String user, Map localForward, Map remoteForward) {
+    public Host(String host, String hostname, int port, String user, Map localForward, Map remoteForward) {
+        this.host = host;
         this.hostname = hostname;
         this.port = port;
         this.user = user;
         this.localForward = localForward;
         this.remoteForward = remoteForward;
+    }
+
+    public String getHostAlias() {
+        return this.host;
     }
 
     public String getHostName() {
@@ -42,6 +48,10 @@ public class Host {
 
     public void setHostName(String hostname) {
         this.hostname = hostname;
+    }
+
+    public void setHostAlias(String host) {
+        this.host = host;
     }
 
     public void setPort(int port) {

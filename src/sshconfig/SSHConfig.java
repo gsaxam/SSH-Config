@@ -1,4 +1,4 @@
-package sshconfig;
+package SSHConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,7 @@ public class SSHConfig {
         return stringArray;
     }
 
-    public String getHostName(String str) {
+    public String getHostAlias(String str) {
         String[] hostNameLine = str.split("/n");
         if (!hostNameLine[0].trim().startsWith("#")) {
             String[] hostNameToSplit = hostNameLine[0].trim().split(" ");
@@ -150,10 +150,11 @@ public class SSHConfig {
 
         Config hostList = new Config();
         while (m.find()) {
-            if (starter.getHostName(m.group(0)) != null) {
+            if (starter.getHostAlias(m.group(0)) != null) {
                 Map hostProperties = new HashMap(starter.getHostProperties(m.group(0)));
 
-                hostList.addHost(new Host(hostProperties.get("HostName").toString(),
+                hostList.addHost(new Host(starter.getHostAlias(m.group(0)),
+                        hostProperties.get("HostName").toString(),
                         (hostProperties.containsKey("Port")) ? Integer.parseInt(hostProperties.get("Port").toString()) : -1,
                         hostProperties.get("User").toString(),
                         starter.getLocalForwarding(m.group(0)),
@@ -164,7 +165,14 @@ public class SSHConfig {
 
         starter.print(hostList.getAllHosts());
         for (Host h : hostList.getAllHosts()) {
-            print(h.getLocalForward());
+            if (h.getHostAlias().equals("tb")) {
+                h.setHostAlias("test_fucking_bed");
+            }
+            print(h.getHostAlias());
+        }
+
+        for (Host h : hostList.getAllHosts()) {
+            System.out.println(h.getHostAlias());
         }
     }
 
