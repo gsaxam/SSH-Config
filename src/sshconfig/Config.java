@@ -1,4 +1,4 @@
-package sshconfig;
+package SSHConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +23,10 @@ public class Config {
 
     public void removeHost(Host host) {
         this.hostList.remove(host);
+    }
+
+    public int getNumberOfHosts(){
+        return this.hostList.size();
     }
 
 }
