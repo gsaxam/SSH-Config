@@ -1,6 +1,6 @@
 .text-field {
     -fx-background-color: #1a8fab;
-    -fx-border-color: #686967;
+    -fx-border-color: #fefffd;
     -fx-text-inner-color: #FFF;
 }
 .scroll-pane {
@@ -14,4 +14,17 @@
 
 .scroll-pane .corner {
     -fx-background-insets: 0;
+}
+.label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #444444;
+    -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
+    -fx-min-width: 120;
+    -fx-min-height: 29;
+    -fx-border-color: #acacac;
+    -fx-label-padding: 7;
+}
+.combo-box {
+    -fx-min-width: 120;
 }
