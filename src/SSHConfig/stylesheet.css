@@ -1,0 +1,17 @@
+.text-field {
+    -fx-background-color: #1a8fab;
+    -fx-border-color: #686967;
+    -fx-text-inner-color: #FFF;
+}
+.scroll-pane {
+    -fx-background-insets: 0;
+
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
