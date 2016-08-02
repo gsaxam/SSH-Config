@@ -14,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
@@ -62,11 +63,11 @@ public class Main extends Application {
 
         HBox hbox = addHBox();
         border.setTop(hbox);
-        border.setLeft(addVBox());
+        border.setLeft(addLeftNavigation());
         border.setCenter(addShuttleIconAsDefaultView());
-        addStackPane(hbox);         // Add stack to HBox in top region
+        headingBar(hbox);         // Add stack to HBox in top region
 
-        Scene mainScene = new Scene(border, 800, 420);
+        Scene mainScene = new Scene(border, 800, 500);
 
         File f = new File("src/SShConfig/stylesheet.css");
         mainScene.getStylesheets().clear();
@@ -112,7 +113,10 @@ public class Main extends Application {
                         (hostProperties.containsKey("Port")) ? Integer.parseInt(hostProperties.get("Port").toString()) : -1,
                         hostProperties.get("User").toString(),
                         starter.getLocalForwarding(m.group(0)),
-                        starter.getRemoteForwarding(m.group(0)))
+                        starter.getRemoteForwarding(m.group(0)),
+                        (hostProperties.containsKey("IdentityFile")) ? hostProperties.get("IdentityFile").toString() : null,
+                        (hostProperties.containsKey("ForwardAgent")) ? hostProperties.get("ForwardAgent").toString() : null,
+                        (hostProperties.containsKey("ForwardX11")) ? hostProperties.get("ForwardX11").toString() : null)
                 );
             }
         }
@@ -148,26 +152,26 @@ public class Main extends Application {
         detailsBox.setSpacing(0);
 
         ScrollPane s1 = new ScrollPane();
-        s1.setPrefSize(510, 320); //set scrollpane width and height
+        s1.setPrefSize(510, 490); //set scrollpane width and height
         s1.setContent(grid);
         detailsBox.getChildren().add(s1);
 
         return detailsBox;
     }
 
-    public VBox addVBox() throws IOException {
-        VBox vbox = new VBox();
-        vbox.setPadding(new Insets(10));
-        vbox.setSpacing(8);
+    public VBox addLeftNavigation() throws IOException {
+        VBox hostList = new VBox();
+        hostList.setPadding(new Insets(10));
+        hostList.setSpacing(8);
 
         Text title = new Text("HOSTS");
         title.setFont(Font.font("Optima", FontWeight.BOLD, 14));
-        vbox.getChildren().add(title);
+        hostList.getChildren().add(title);
 
         //list navigation start here
         ObservableList hostNavigationList = FXCollections.observableArrayList();
         final ListView listView = new ListView(hostNavigationList);
-        listView.setPrefSize(200, 315);
+        listView.setPrefSize(200, 490); // left navigation width, height
         listView.setEditable(true);
         //list navigation end here
 
@@ -179,17 +183,16 @@ public class Main extends Application {
                 new ChangeListener<String>() {
                     public void changed(ObservableValue<? extends String> ov,
                                         String old_val, String new_val) {
-                        System.out.println("THE NEW VAL =" + new_val);
                         border.setCenter(detailsVBox(getHostDetailsAsGrid(new_val)));
 
                     }
                 });
-        vbox.getChildren().add(listView);
+        hostList.getChildren().add(listView);
 
-        return vbox;
+        return hostList;
     }
 
-    public void addStackPane(HBox hb) {
+    public void headingBar(HBox hb) {
         StackPane stack = new StackPane();
         Rectangle helpIcon = new Rectangle(30.0, 25.0);
         helpIcon.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
@@ -210,40 +213,73 @@ public class Main extends Application {
         stack.setAlignment(Pos.CENTER_RIGHT);     // Right-justify nodes in stack
         StackPane.setMargin(helpText, new Insets(0, 10, 0, 0)); // Center "?"
 
-        hb.getChildren().add(stack);            // Add to HBox from Example 1-2
+        hb.getChildren().add(stack);
         HBox.setHgrow(stack, Priority.ALWAYS);    // Give stack any extra space
     }
 
     public GridPane getHostDetailsAsGrid(String hostAlias) {
         GridPane grid = new GridPane();
         for (Host h : allHosts.getAllHosts()) {
-
+            int rowToInsert = 0;
             if (h.getHostAlias().equals(hostAlias)) {
                 grid.setVgap(4); //line spacing between grid elements
                 grid.setPadding(new Insets(5, 5, 5, 50)); //last value sets left-indentation
-                grid.add(new Label("Host "), 0, 0);
-                grid.add(new TextField(h.getHostName()), 1, 0);
-                grid.add(new Label("Port "), 0, 1);
-                grid.add(new TextField(String.valueOf(h.getPort())), 1, 1);
-                grid.add(new Label("User "), 0, 2);
-                grid.add(new TextField(h.getUser()), 1, 2);
+
+                grid.addRow(rowToInsert, new Label("Host "));
+                grid.add(new TextField(h.getHostName()), 1, rowToInsert);
+                rowToInsert++;
+
+                if (h.getPort() != -1) {
+                    grid.addRow(rowToInsert, new Label("Port "));
+                    grid.add(new TextField(String.valueOf(h.getPort())), 1, rowToInsert);
+                    rowToInsert++;
+                }
+
+                grid.addRow(rowToInsert, new Label("User "));
+                grid.add(new TextField(h.getUser()), 1, rowToInsert);
+                rowToInsert++;
 
                 try {
                     Set<Integer> localForwardList = h.getLocalForward().keySet();
-                    int addRowCount = 3; //the last index used was 2
+                    Set<Integer> remoteForwardList = h.getRemoteForward().keySet();
                     if (localForwardList.size() > 0) {
                         for (int key : localForwardList) {
-                            grid.addRow(addRowCount, new Label("Local Forward "));
-                            grid.add(new TextField(String.valueOf(key)), 1, addRowCount);
-                            grid.add(new TextField(h.getLocalForward().get(key).toString()), 2, addRowCount);
-                            addRowCount++;
+                            grid.addRow(rowToInsert, new Label("Local Forward "));
+                            grid.add(new TextField(String.valueOf(key)), 1, rowToInsert);
+                            grid.add(new TextField(h.getLocalForward().get(key).toString()), 2, rowToInsert);
+                            rowToInsert++;
+                        }
+                    }
+                    if (remoteForwardList.size() > 0) {
+                        for (int key : remoteForwardList) {
+                            grid.addRow(rowToInsert, new Label("Remote Forward "));
+                            grid.add(new TextField(String.valueOf(key)), 1, rowToInsert);
+                            grid.add(new TextField(h.getRemoteForward().get(key).toString()), 2, rowToInsert);
+                            rowToInsert++;
                         }
                     }
                 } catch (NullPointerException ex) {
                     System.out.println("No LocalForwards Found");
                 }
-
-
+                try {
+                    if (h.getIdentityFile() != null) {
+                        grid.addRow(rowToInsert, new Label("IdentityFile"));
+                        grid.add(new TextField(String.valueOf(h.getIdentityFile())), 1, rowToInsert);
+                        rowToInsert++;
+                    }
+                    if (h.getForwardAgent() != null) {
+                        grid.addRow(rowToInsert, new Label("ForwardAgent"));
+                        grid.add(new TextField(String.valueOf(h.getForwardAgent())), 1, rowToInsert);
+                        rowToInsert++;
+                    }
+                    if (h.getForwardX11() != null) {
+                        grid.addRow(rowToInsert, new Label("ForwardX11"));
+                        grid.add(new TextField(String.valueOf(h.getForwardX11())), 1, rowToInsert);
+                        rowToInsert++;
+                    }
+                } catch (NullPointerException ex) {
+                    System.out.println("One of the SSH Options was not set");
+                }
             }
         }
         return grid;
@@ -256,7 +292,7 @@ public class Main extends Application {
         grid.setPadding(new Insets(5, 5, 5, 50)); //last value sets left-indentation
         Text newHostTitle = new Text("+ NEW HOST");
         newHostTitle.setFont(Font.font("Optima", FontWeight.BOLD, 14));
-        Button newHostSave = new Button("Add Host");
+        Button newHostSaveBtn = new Button("Save");
         grid.add(newHostTitle, 0, 0);
 
         grid.add(new Label("Host Alias"), 0, 1);
@@ -274,53 +310,111 @@ public class Main extends Application {
 
         int lastGridRowPos = 4;
         ObservableList<String> options = FXCollections.observableArrayList(
-                        "IdentityFile",
-                        "LocalForward",
-                        "RemoteForward",
-                        "ForwardAgent",
-                        "ForwardX11"
-                );
-        final ComboBox propertyBox = new ComboBox(options);
-        propertyBox.valueProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue ov, String t, String t1) {
-                System.out.println("SELECTED=" + t1);
+                "IdentityFile",
+                "LocalForward",
+                "RemoteForward",
+                "ForwardAgent",
+                "ForwardX11"
+        );
+        ComboBox propertyBox = new ComboBox(options);
+
+        propertyBox.setCellFactory(param -> {
+            final ListCell<String> cell = new ListCell<String>() {
+                @Override
+                public void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (!empty)
+                        setText(item);
+                }
+            };
+            cell.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+                propertyBox.setValue(null);
+                propertyBox.getSelectionModel().select(cell.getItem());
+
+                e.consume();
+            });
+            return cell;
+        });
+
+        Map<Integer, String> addLocalForwards = new HashMap<>();
+        Map<Integer, String> addRemoteForwards = new HashMap<>();
+        Map<TextField, TextField> tempMapLF = new HashMap<>();
+        Map<TextField, TextField> tempMapRF = new HashMap<>();
+        Map<String, TextField> otherOptions = new HashMap<>();
+
+        propertyBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
                 int rowCounter = getRowCount(grid);
-                grid.add(new Label(t1), 0, rowCounter + 1);
-                TextField field = newTextFieldWithIdPrompt(t1.toUpperCase(), "");
-                grid.add(field, 1, rowCounter + 2);
-//
+                grid.add(new Label(newVal.toString()), 0, rowCounter + 1);
+                TextField forwardingsKey = newTextFieldWithIdPrompt(newVal.toString(), "port to forward");
+                TextField forwardingsValue = newTextFieldWithIdPrompt(newVal.toString(), "destination address");
+                TextField field = new TextField();
+                if (newVal.toString().equals("LocalForward")) {
+                    tempMapLF.put(forwardingsKey, forwardingsValue);
+                    grid.add(forwardingsKey, 1, rowCounter + 1);
+                    grid.add(forwardingsValue, 2, rowCounter + 1);
+                } else if (newVal.toString().equals("RemoteForward")) {
+                    tempMapRF.put(forwardingsKey, forwardingsValue);
+                    grid.add(forwardingsKey, 1, rowCounter + 1);
+                    grid.add(forwardingsValue, 2, rowCounter + 1);
+                } else {
+                    field = newTextFieldWithIdPrompt(newVal.toString(), "");
+                    otherOptions.put(newVal.toString(), field);
+                    grid.add(field, 1, rowCounter + 1);
+                }
+
+                newHostSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
+                            addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                        }
+                        for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
+                            addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                        }
+                        for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
+
+                        }
+                        allHosts.addHost(new Host(hostAliasField.getText(),
+                                hostField.getText(),
+                                Integer.parseInt(portField.getText()),
+                                userField.getText(),
+                                addLocalForwards,
+                                addRemoteForwards,
+                                (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : null,
+                                (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : null,
+                                (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : null
+                        ));
+                        reDrawHostNav();
+                    }
+                });
             }
         });
         propertyBox.setPromptText("Add SSH Option");
 
-        newHostSave.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                allHosts.addHost(new Host(hostAliasField.getText(), hostField.getText(), Integer.parseInt(portField.getText()), userField.getText(), null, null));
-                reDrawHostNav();
-            }
-        });
-        grid.add(propertyBox, 1, 5);
-        grid.add(newHostSave, 3, 6);
+        grid.add(propertyBox, 1, 0);
+        grid.add(newHostSaveBtn, 2, 0);
+
         return grid;
     }
+
     private int getRowCount(GridPane pane) {
         int numRows = pane.getRowConstraints().size();
         for (int i = 0; i < pane.getChildren().size(); i++) {
             Node child = pane.getChildren().get(i);
             if (child.isManaged()) {
                 Integer rowIndex = GridPane.getRowIndex(child);
-                if(rowIndex != null){
-                    numRows = Math.max(numRows,rowIndex+1);
+                if (rowIndex != null) {
+                    numRows = Math.max(numRows, rowIndex + 1);
                 }
             }
         }
         return numRows;
     }
+
     public void reDrawHostNav() {
         try {
-            border.setLeft(addVBox());
+            border.setLeft(addLeftNavigation());
         } catch (IOException e1) {
             e1.printStackTrace();
         }
