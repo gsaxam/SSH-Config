@@ -380,49 +380,52 @@ public class Main extends Application {
                     otherOptions.put(selectedValue.toString(), field);
                     grid.add(field, 1, rowCounter + 1);
                 }
-
-                newHostEditSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
-                            addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
-                        }
-                        for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
-                            addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
-                        }
-                        System.out.println("EDITED =>" + editableHostField.getText());
-                        System.out.println("EDITED =>" + editableIdentityFileField.getText());
-                        System.out.println("EDITED =>" + editableForwardAgentField.getText());
-
-
-                        // make sure otherOptions map contains edited/updated values
-                        for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
-                            if (entry.getValue().equals("IdentityFile")) {
-                                entry.setValue(editableIdentityFileField);
-                            } else if (entry.getValue().equals("ForwardAgent")) {
-                                entry.setValue(editableForwardAgentField);
-                            } else if (entry.getValue().equals("ForwardX11")) {
-                                entry.setValue(editableForwardX11Field);
-                            }
-                        }
-                        print(currentHost.getHostAlias());
-                        setExistingHostProperties(currentHost,
-                                currentHost.getHostAlias(),
-                                editableHostField.getText().isEmpty() ? currentHost.getHostName() : editableHostField.getText().toString(),
-                                editablePortField.getText().isEmpty() ? currentHost.getPort() : Integer.parseInt(editablePortField.getText()),
-                                editableUserField.getText().isEmpty() ? currentHost.getUser() : editableUserField.getText(),
-                                addLocalForwards,
-                                addRemoteForwards,
-                                editableIdentityFileField.getText().isEmpty() ? null : editableIdentityFileField.getText(),
-                                editableForwardAgentField.getText().isEmpty() ? null : editableForwardAgentField.getText(),
-                                editableForwardX11Field.getText().isEmpty() ? null : editableForwardX11Field.getText()
-                        );
-
-                        reDrawHostNav();
-                    }
-                });
             }
         });
+//                newHostEditSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
+//                    @Override
+//                    public void handle(ActionEvent e) {
+        newHostEditSaveBtn.setOnMousePressed(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent me) {
+                for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
+                    addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                }
+                for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
+                    addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                }
+                System.out.println("EDITED =>" + editableHostField.getText());
+                System.out.println("EDITED =>" + editableIdentityFileField.getText());
+                System.out.println("EDITED =>" + editableForwardAgentField.getText());
+
+
+                // make sure otherOptions map contains edited/updated values
+                for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
+                    if (entry.getValue().equals("IdentityFile")) {
+                        entry.setValue(editableIdentityFileField);
+                    } else if (entry.getValue().equals("ForwardAgent")) {
+                        entry.setValue(editableForwardAgentField);
+                    } else if (entry.getValue().equals("ForwardX11")) {
+                        entry.setValue(editableForwardX11Field);
+                    }
+                }
+                print(currentHost.getHostAlias());
+                setExistingHostProperties(currentHost,
+                        currentHost.getHostAlias(),
+                        editableHostField.getText().isEmpty() ? currentHost.getHostName() : editableHostField.getText().toString(),
+                        editablePortField.getText().isEmpty() ? currentHost.getPort() : Integer.parseInt(editablePortField.getText()),
+                        editableUserField.getText().isEmpty() ? currentHost.getUser() : editableUserField.getText(),
+                        addLocalForwards,
+                        addRemoteForwards,
+                        editableIdentityFileField.getText().isEmpty() ? null : editableIdentityFileField.getText(),
+                        editableForwardAgentField.getText().isEmpty() ? null : editableForwardAgentField.getText(),
+                        editableForwardX11Field.getText().isEmpty() ? null : editableForwardX11Field.getText()
+                );
+
+                reDrawHostNav();
+            }
+        });
+
+
         propertyBox.setPromptText("Add SSH Option");
 
         grid.add(propertyBox, 1, 0);
@@ -506,59 +509,60 @@ public class Main extends Application {
                     otherOptions.put(selectedValue.toString(), field);
                     grid.add(field, 1, rowCounter + 1);
                 }
-
-                newHostSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
-                            addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
-                        }
-                        for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
-                            addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
-                        }
-
-                        Boolean createNewHost = false;
-                        Host existingHost = null;
-                        for (Host host : allHosts.getAllHosts()) {
-                            if (hostAliasField.getText().equals(host.getHostAlias())) {
-                                createNewHost = false;
-                                existingHost = host;
-                                break;
-                            } else {
-                                createNewHost = true;
-                            }
-                        }
-                        print("New host =" + hostAliasField.getText() + "and createNewHost =" + createNewHost);
-                        if (createNewHost) {
-                            allHosts.addHost(new Host(hostAliasField.getText(),
-                                    hostField.getText(),
-                                    Integer.parseInt(portField.getText()),
-                                    userField.getText(),
-                                    addLocalForwards,
-                                    addRemoteForwards,
-                                    (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : null,
-                                    (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : null,
-                                    (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : null));
-                        } else {
-                            setExistingHostProperties(existingHost,
-                                    hostAliasField.getText(),
-                                    hostField.getText(),
-                                    Integer.parseInt(portField.getText()),
-                                    userField.getText(),
-                                    addLocalForwards,
-                                    addRemoteForwards,
-                                    (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : "",
-                                    (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : "",
-                                    (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : ""
-                            );
-                        }
-
-
-                        reDrawHostNav();
-                    }
-                });
             }
         });
+
+        newHostSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
+                    addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                }
+                for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
+                    addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                }
+
+                Boolean createNewHost = false;
+                Host existingHost = null;
+                for (Host host : allHosts.getAllHosts()) {
+                    if (hostAliasField.getText().equals(host.getHostAlias())) {
+                        createNewHost = false;
+                        existingHost = host;
+                        break;
+                    } else {
+                        createNewHost = true;
+                    }
+                }
+                print("New host =" + hostAliasField.getText() + "and createNewHost =" + createNewHost);
+                if (createNewHost) {
+                    allHosts.addHost(new Host(hostAliasField.getText(),
+                            hostField.getText(),
+                            Integer.parseInt(portField.getText()),
+                            userField.getText(),
+                            addLocalForwards,
+                            addRemoteForwards,
+                            (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : null,
+                            (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : null,
+                            (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : null));
+                } else {
+                    setExistingHostProperties(existingHost,
+                            hostAliasField.getText(),
+                            hostField.getText(),
+                            Integer.parseInt(portField.getText()),
+                            userField.getText(),
+                            addLocalForwards,
+                            addRemoteForwards,
+                            (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : "",
+                            (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : "",
+                            (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : ""
+                    );
+                }
+
+
+                reDrawHostNav();
+            }
+        });
+
         propertyBox.setPromptText("Add SSH Option");
 
         grid.add(propertyBox, 1, 0);
