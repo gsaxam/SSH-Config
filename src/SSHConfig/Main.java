@@ -228,6 +228,9 @@ public class Main extends Application {
     }
 
     public GridPane getHostDetailsAsGrid(String hostAlias) {
+
+        resetGlobals();
+
         GridPane grid = new GridPane();
 
         // store existing local and remote forwards so that they can be combined with new edits
@@ -415,7 +418,6 @@ public class Main extends Application {
                                 editableForwardX11Field.getText().isEmpty() ? null : editableForwardX11Field.getText()
                         );
 
-                        resetGlobals();
                         reDrawHostNav();
                     }
                 });
