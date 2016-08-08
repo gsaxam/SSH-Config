@@ -35,6 +35,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main extends Application {
+    Host currentHost = new Host(null, null, 0, null, null, null, null, null, null);
+
+    // declare TextFields to retrieve updated values
+    TextField editableHostField = new TextField();
+    TextField editablePortField = new TextField();
+    TextField editableUserField = new TextField();
+    TextField editableIdentityFileField = new TextField();
+    TextField editableForwardAgentField = new TextField();
+    TextField editableForwardX11Field = new TextField();
+
     public static void print(Object o) {
         System.out.println(o.toString());
     }
@@ -219,24 +229,40 @@ public class Main extends Application {
 
     public GridPane getHostDetailsAsGrid(String hostAlias) {
         GridPane grid = new GridPane();
+
+        // store existing local and remote forwards so that they can be combined with new edits
+        Map<Integer, String> addLocalForwards = new HashMap<>();
+        Map<Integer, String> addRemoteForwards = new HashMap<>();
+
+        // store existing 'otherOptions' such as identityFile, forwardAgent and forwardX11
+        Map<String, TextField> otherOptions = new HashMap<>();
+
+
         for (Host h : allHosts.getAllHosts()) {
-            int rowToInsert = 0;
+            int rowToInsert = 1;
             if (h.getHostAlias().equals(hostAlias)) {
+                print(h.getHostName());
+
+                // set currentHost as the validated host for this view
+                currentHost = h;
                 grid.setVgap(4); //line spacing between grid elements
                 grid.setPadding(new Insets(5, 5, 5, 50)); //last value sets left-indentation
 
                 grid.addRow(rowToInsert, new Label("Host "));
-                grid.add(new TextField(h.getHostName()), 1, rowToInsert);
+                editableHostField = new TextField(h.getHostName());
+                grid.add(editableHostField, 1, rowToInsert);
                 rowToInsert++;
 
                 if (h.getPort() != -1) {
                     grid.addRow(rowToInsert, new Label("Port "));
-                    grid.add(new TextField(String.valueOf(h.getPort())), 1, rowToInsert);
+                    editablePortField = new TextField(String.valueOf(h.getPort()));
+                    grid.add(editablePortField, 1, rowToInsert);
                     rowToInsert++;
                 }
 
                 grid.addRow(rowToInsert, new Label("User "));
-                grid.add(new TextField(h.getUser()), 1, rowToInsert);
+                editableUserField = new TextField(h.getUser());
+                grid.add(editableUserField, 1, rowToInsert);
                 rowToInsert++;
 
                 try {
@@ -247,6 +273,7 @@ public class Main extends Application {
                             grid.addRow(rowToInsert, new Label("Local Forward "));
                             grid.add(new TextField(String.valueOf(key)), 1, rowToInsert);
                             grid.add(new TextField(h.getLocalForward().get(key).toString()), 2, rowToInsert);
+                            addLocalForwards.put(key, h.getLocalForward().get(key).toString());
                             rowToInsert++;
                         }
                     }
@@ -255,6 +282,7 @@ public class Main extends Application {
                             grid.addRow(rowToInsert, new Label("Remote Forward "));
                             grid.add(new TextField(String.valueOf(key)), 1, rowToInsert);
                             grid.add(new TextField(h.getRemoteForward().get(key).toString()), 2, rowToInsert);
+                            addRemoteForwards.put(key, h.getRemoteForward().get(key).toString());
                             rowToInsert++;
                         }
                     }
@@ -262,26 +290,141 @@ public class Main extends Application {
                     System.out.println("No LocalForwards Found");
                 }
                 try {
-                    if (h.getIdentityFile() != null) {
+                    if (h.getIdentityFile() != null && h.getIdentityFile() != "") {
                         grid.addRow(rowToInsert, new Label("IdentityFile"));
-                        grid.add(new TextField(String.valueOf(h.getIdentityFile())), 1, rowToInsert);
+                        editableIdentityFileField = new TextField(String.valueOf(h.getIdentityFile()));
+                        grid.add(editableIdentityFileField, 1, rowToInsert);
                         rowToInsert++;
                     }
-                    if (h.getForwardAgent() != null) {
+                    if (h.getForwardAgent() != null && h.getForwardAgent() != "") {
                         grid.addRow(rowToInsert, new Label("ForwardAgent"));
-                        grid.add(new TextField(String.valueOf(h.getForwardAgent())), 1, rowToInsert);
+                        editableForwardAgentField = new TextField(String.valueOf(h.getForwardAgent()));
+                        grid.add(editableForwardAgentField, 1, rowToInsert);
                         rowToInsert++;
                     }
-                    if (h.getForwardX11() != null) {
+                    if (h.getForwardX11() != null && h.getForwardX11() != "") {
                         grid.addRow(rowToInsert, new Label("ForwardX11"));
-                        grid.add(new TextField(String.valueOf(h.getForwardX11())), 1, rowToInsert);
+                        editableForwardX11Field = new TextField(String.valueOf(h.getForwardX11()));
+                        grid.add(editableForwardX11Field, 1, rowToInsert);
                         rowToInsert++;
                     }
                 } catch (NullPointerException ex) {
                     System.out.println("One of the SSH Options was not set");
                 }
+
+                //manually set existing identityFile, forwardAgent and forwardX11 so that they are not
+                //overwritten by new edits.
+//                if (currentHost.getIdentityFile() != null && currentHost.getIdentityFile() != "") {
+//                    editableIdentityFileField.setText(currentHost.getIdentityFile());
+//                }
+//                if (currentHost.getForwardAgent() != null && currentHost.getForwardAgent() != "") {
+//                    editableForwardAgentField.setText(currentHost.getForwardAgent());
+//                }
+//                if (currentHost.getForwardX11() != null && currentHost.getForwardX11() != "") {
+//                    editableForwardX11Field.setText(currentHost.getForwardX11());
+//                }
             }
         }
+
+        Button newHostEditSaveBtn = new Button("Save");
+        ObservableList<String> options = FXCollections.observableArrayList(
+                "IdentityFile",
+                "LocalForward",
+                "RemoteForward",
+                "ForwardAgent",
+                "ForwardX11"
+        );
+        ComboBox propertyBox = new ComboBox(options);
+
+        propertyBox.setCellFactory(param -> {
+            final ListCell<String> cell = new ListCell<String>() {
+                @Override
+                public void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (!empty)
+                        setText(item);
+                }
+            };
+            cell.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+                propertyBox.setValue(null);
+                propertyBox.getSelectionModel().select(cell.getItem());
+
+                e.consume();
+            });
+            return cell;
+        });
+
+        Map<TextField, TextField> tempMapLF = new HashMap<>();
+        Map<TextField, TextField> tempMapRF = new HashMap<>();
+
+        propertyBox.valueProperty().addListener((obs, oldVal, selectedValue) -> {
+            if (selectedValue != null) {
+                int rowCounter = getRowCount(grid);
+                grid.add(new Label(selectedValue.toString()), 0, rowCounter + 1);
+                TextField forwardingsKey = newTextFieldWithIdPrompt(selectedValue.toString(), "port to forward");
+                TextField forwardingsValue = newTextFieldWithIdPrompt(selectedValue.toString(), "destination address");
+                TextField field = new TextField();
+                if (selectedValue.toString().equals("LocalForward")) {
+                    tempMapLF.put(forwardingsKey, forwardingsValue);
+                    grid.add(forwardingsKey, 1, rowCounter + 1);
+                    grid.add(forwardingsValue, 2, rowCounter + 1);
+                } else if (selectedValue.toString().equals("RemoteForward")) {
+                    tempMapRF.put(forwardingsKey, forwardingsValue);
+                    grid.add(forwardingsKey, 1, rowCounter + 1);
+                    grid.add(forwardingsValue, 2, rowCounter + 1);
+                } else {
+                    field = newTextFieldWithIdPrompt(selectedValue.toString(), "");
+                    otherOptions.put(selectedValue.toString(), field);
+                    grid.add(field, 1, rowCounter + 1);
+                }
+
+                newHostEditSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
+                            addLocalForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                        }
+                        for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
+                            addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
+                        }
+                        System.out.println("EDITED =>" + editableHostField.getText());
+                        System.out.println("EDITED =>" + editableIdentityFileField.getText());
+                        System.out.println("EDITED =>" + editableForwardAgentField.getText());
+
+
+                        // make sure otherOptions map contains edited/updated values
+                        for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
+                            if (entry.getValue().equals("IdentityFile")) {
+                                entry.setValue(editableIdentityFileField);
+                            } else if (entry.getValue().equals("ForwardAgent")) {
+                                entry.setValue(editableForwardAgentField);
+                            } else if (entry.getValue().equals("ForwardX11")) {
+                                entry.setValue(editableForwardX11Field);
+                            }
+                        }
+                        print(currentHost.getHostAlias());
+                        setExistingHostProperties(currentHost,
+                                currentHost.getHostAlias(),
+                                editableHostField.getText().isEmpty() ? currentHost.getHostName() : editableHostField.getText().toString(),
+                                editablePortField.getText().isEmpty() ? currentHost.getPort() : Integer.parseInt(editablePortField.getText()),
+                                editableUserField.getText().isEmpty() ? currentHost.getUser() : editableUserField.getText(),
+                                addLocalForwards,
+                                addRemoteForwards,
+                                editableIdentityFileField.getText().isEmpty() ? null : editableIdentityFileField.getText(),
+                                editableForwardAgentField.getText().isEmpty() ? null : editableForwardAgentField.getText(),
+                                editableForwardX11Field.getText().isEmpty() ? null : editableForwardX11Field.getText()
+                        );
+
+                        resetGlobals();
+                        reDrawHostNav();
+                    }
+                });
+            }
+        });
+        propertyBox.setPromptText("Add SSH Option");
+
+        grid.add(propertyBox, 1, 0);
+        grid.add(newHostEditSaveBtn, 2, 0);
         return grid;
 
     }
@@ -308,7 +451,6 @@ public class Main extends Application {
         TextField userField = newTextFieldWithIdPrompt("USER", "username for login");
         grid.add(userField, 1, 4);
 
-        int lastGridRowPos = 4;
         ObservableList<String> options = FXCollections.observableArrayList(
                 "IdentityFile",
                 "LocalForward",
@@ -342,24 +484,24 @@ public class Main extends Application {
         Map<TextField, TextField> tempMapRF = new HashMap<>();
         Map<String, TextField> otherOptions = new HashMap<>();
 
-        propertyBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
+        propertyBox.valueProperty().addListener((obs, oldVal, selectedValue) -> {
+            if (selectedValue != null) {
                 int rowCounter = getRowCount(grid);
-                grid.add(new Label(newVal.toString()), 0, rowCounter + 1);
-                TextField forwardingsKey = newTextFieldWithIdPrompt(newVal.toString(), "port to forward");
-                TextField forwardingsValue = newTextFieldWithIdPrompt(newVal.toString(), "destination address");
+                grid.add(new Label(selectedValue.toString()), 0, rowCounter + 1);
+                TextField forwardingsKey = newTextFieldWithIdPrompt(selectedValue.toString(), "port to forward");
+                TextField forwardingsValue = newTextFieldWithIdPrompt(selectedValue.toString(), "destination address");
                 TextField field = new TextField();
-                if (newVal.toString().equals("LocalForward")) {
+                if (selectedValue.toString().equals("LocalForward")) {
                     tempMapLF.put(forwardingsKey, forwardingsValue);
                     grid.add(forwardingsKey, 1, rowCounter + 1);
                     grid.add(forwardingsValue, 2, rowCounter + 1);
-                } else if (newVal.toString().equals("RemoteForward")) {
+                } else if (selectedValue.toString().equals("RemoteForward")) {
                     tempMapRF.put(forwardingsKey, forwardingsValue);
                     grid.add(forwardingsKey, 1, rowCounter + 1);
                     grid.add(forwardingsValue, 2, rowCounter + 1);
                 } else {
-                    field = newTextFieldWithIdPrompt(newVal.toString(), "");
-                    otherOptions.put(newVal.toString(), field);
+                    field = newTextFieldWithIdPrompt(selectedValue.toString(), "");
+                    otherOptions.put(selectedValue.toString(), field);
                     grid.add(field, 1, rowCounter + 1);
                 }
 
@@ -372,19 +514,44 @@ public class Main extends Application {
                         for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
                             addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
                         }
-                        for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
 
+                        Boolean createNewHost = false;
+                        Host existingHost = null;
+                        for (Host host : allHosts.getAllHosts()) {
+                            if (hostAliasField.getText().equals(host.getHostAlias())) {
+                                createNewHost = false;
+                                existingHost = host;
+                                break;
+                            } else {
+                                createNewHost = true;
+                            }
                         }
-                        allHosts.addHost(new Host(hostAliasField.getText(),
-                                hostField.getText(),
-                                Integer.parseInt(portField.getText()),
-                                userField.getText(),
-                                addLocalForwards,
-                                addRemoteForwards,
-                                (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : null,
-                                (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : null,
-                                (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : null
-                        ));
+                        print("New host =" + hostAliasField.getText() + "and createNewHost =" + createNewHost);
+                        if (createNewHost) {
+                            allHosts.addHost(new Host(hostAliasField.getText(),
+                                    hostField.getText(),
+                                    Integer.parseInt(portField.getText()),
+                                    userField.getText(),
+                                    addLocalForwards,
+                                    addRemoteForwards,
+                                    (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : null,
+                                    (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : null,
+                                    (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : null));
+                        } else {
+                            setExistingHostProperties(existingHost,
+                                    hostAliasField.getText(),
+                                    hostField.getText(),
+                                    Integer.parseInt(portField.getText()),
+                                    userField.getText(),
+                                    addLocalForwards,
+                                    addRemoteForwards,
+                                    (otherOptions.containsKey("IdentityFile")) ? otherOptions.get("IdentityFile").getText().toString() : "",
+                                    (otherOptions.containsKey("ForwardAgent")) ? otherOptions.get("ForwardAgent").getText().toString() : "",
+                                    (otherOptions.containsKey("ForwardX11")) ? otherOptions.get("ForwardX11").getText().toString() : ""
+                            );
+                        }
+
+
                         reDrawHostNav();
                     }
                 });
@@ -425,5 +592,29 @@ public class Main extends Application {
         textField.setId(textFieldID);
         textField.setPromptText(promptText);
         return textField;
+    }
+
+    public void setExistingHostProperties(Host host, String hostAlias, String hostName, int port, String userName,
+                                          Map localForwards, Map remoteForwards, String identityFile, String forwardAgent,
+                                          String forwardX11) {
+        host.setHostAlias(hostAlias);
+        host.setHostName(hostName);
+        host.setPort(port);
+        host.setUser(userName);
+        host.addLocalForward(localForwards);
+        host.addRemoteForward(remoteForwards);
+        host.setIdentityFile(identityFile);
+        host.setForwardAgent(forwardAgent);
+        host.setForwardX11(forwardX11);
+
+    }
+
+    public void resetGlobals() {
+        editableHostField = new TextField();
+        editablePortField = new TextField();
+        editableUserField = new TextField();
+        editableIdentityFileField = new TextField();
+        editableForwardAgentField = new TextField();
+        editableForwardX11Field = new TextField();
     }
 }

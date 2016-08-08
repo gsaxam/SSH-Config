@@ -12,14 +12,20 @@ public class Host {
     private String user;
     private Map localForward;
     private Map remoteForward;
+    private String identityFile;
+    private String forwardAgent;
+    private String forwardX11;
 
-    public Host(String host, String hostname, int port, String user, Map localForward, Map remoteForward) {
+    public Host(String host, String hostname, int port, String user, Map localForward, Map remoteForward, String identityFile, String forwardAgent, String forwardX11) {
         this.host = host;
         this.hostname = hostname;
         this.port = port;
         this.user = user;
         this.localForward = localForward;
         this.remoteForward = remoteForward;
+        this.identityFile = identityFile;
+        this.forwardAgent = forwardAgent;
+        this.forwardX11 = forwardX11;
     }
 
     public String getHostAlias() {
@@ -46,6 +52,18 @@ public class Host {
         return this.remoteForward;
     }
 
+    public String getIdentityFile() {
+        return this.identityFile;
+    }
+
+    public String getForwardAgent() {
+        return this.forwardAgent;
+    }
+
+    public String getForwardX11() {
+        return this.forwardX11;
+    }
+
     public void setHostName(String hostname) {
         this.hostname = hostname;
     }
@@ -63,12 +81,25 @@ public class Host {
 
     }
 
-    public void addLocalForward(int localPort, String destinationAddress) {
-        this.localForward.put(localPort, destinationAddress);
+    public void setIdentityFile(String identityFile) {
+        this.identityFile = identityFile;
     }
 
-    public void addRemoteForward(int remotePort, String destinationAddress) {
-        this.remoteForward.put(remotePort, destinationAddress);
+    public void setForwardAgent(String forwardAgent) {
+        this.forwardAgent = forwardAgent;
     }
+
+    public void setForwardX11(String forwardX11) {
+        this.forwardX11 = forwardX11;
+    }
+
+    public void addLocalForward(Map localForward) {
+        this.localForward = localForward;
+    }
+
+    public void addRemoteForward(Map remoteForward) {
+        this.remoteForward = remoteForward;
+    }
+
 
 }

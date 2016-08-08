@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author saksham.ghimire
@@ -88,6 +86,15 @@ public class SSHConfig {
                 case "user":
                     properties.put("User", fields[1].trim());
                     break;
+                case "identityfile":
+                    properties.put("IdentityFile", fields[1].trim());
+                    break;
+                case "forwardagent":
+                    properties.put("ForwardAgent", fields[1].trim());
+                    break;
+                case "forwardx11":
+                    properties.put("ForwardX11", fields[1].trim());
+                    break;
             }
         }
         return properties;
@@ -133,48 +140,5 @@ public class SSHConfig {
         }
         return remoteForwardMap;
     }
-
-//    public static void main(String[] args) throws IOException {
-//        // TODO code application logic here
-//        SSHConfig starter = new SSHConfig();
-//        starter.checkSSHConfig();
-//        String[] contents = starter.readFileIntoList();
-//        String fullString = "";
-//        for (String str : contents) {
-//            fullString += str + "\n";
-//        }
-//
-//        String pattern = "(^(?!\\s).*?\\n(?:\\s.*?(?:\\n|$))*)";
-//        Pattern r = Pattern.compile(pattern, Pattern.MULTILINE);
-//        Matcher m = r.matcher(fullString);
-//
-//        Config allHosts = new Config();
-//        while (m.find()) {
-//            if (starter.getHostAlias(m.group(0)) != null) {
-//                Map hostProperties = new HashMap(starter.getHostProperties(m.group(0)));
-//
-//                allHosts.addHost(new Host(starter.getHostAlias(m.group(0)),
-//                        hostProperties.get("HostName").toString(),
-//                        (hostProperties.containsKey("Port")) ? Integer.parseInt(hostProperties.get("Port").toString()) : -1,
-//                        hostProperties.get("User").toString(),
-//                        starter.getLocalForwarding(m.group(0)),
-//                        starter.getRemoteForwarding(m.group(0)))
-//                );
-//            }
-//        }
-//
-//        starter.print(allHosts.getAllHosts());
-//        for (Host h : allHosts.getAllHosts()) {
-//            if (h.getHostAlias().equals("tb")) {
-//                h.setHostAlias("test_fucking_bed");
-//            }
-//            print(h.getHostAlias());
-//        }
-//
-//        for (Host h : allHosts.getAllHosts()) {
-//            System.out.println(h.getHostAlias());
-//        }
-//    }
-
 }
 
