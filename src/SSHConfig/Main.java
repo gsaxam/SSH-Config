@@ -400,15 +400,19 @@ public class Main extends Application {
 
                 // make sure otherOptions map contains edited/updated values
                 for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
-                    if (entry.getValue().equals("IdentityFile")) {
-                        entry.setValue(editableIdentityFileField);
-                    } else if (entry.getValue().equals("ForwardAgent")) {
-                        entry.setValue(editableForwardAgentField);
-                    } else if (entry.getValue().equals("ForwardX11")) {
-                        entry.setValue(editableForwardX11Field);
+                    print("Identity from OtherOptions ->" + entry.getValue().getText());
+                    print("Entry.getKey()->" + entry.getKey());
+                    if (entry.getKey().equals("IdentityFile")) {
+                        editableIdentityFileField.setText(entry.getValue().getText());
+                        print("Identity Field inside the IF Statement => " + editableIdentityFileField.getText());
+                    } else if (entry.getKey().equals("ForwardAgent")) {
+                        editableForwardAgentField.setText(entry.getValue().getText());
+                    } else if (entry.getKey().equals("ForwardX11")) {
+                        editableForwardX11Field.setText(entry.getValue().getText());
                     }
                 }
                 print(currentHost.getHostAlias());
+                print("IdentityFile Field==> " + editableIdentityFileField.getText());
                 setExistingHostProperties(currentHost,
                         currentHost.getHostAlias(),
                         editableHostField.getText().isEmpty() ? currentHost.getHostName() : editableHostField.getText().toString(),
