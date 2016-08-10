@@ -45,6 +45,8 @@ public class Main extends Application {
     TextField editableForwardAgentField = new TextField();
     TextField editableForwardX11Field = new TextField();
 
+    Label notification = new Label();
+
     public static void print(Object o) {
         System.out.println(o.toString());
     }
@@ -58,6 +60,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+//        setUserAgentStylesheet(STYLESHEET_MODENA);
         primaryStage.setTitle("SSHUTTLE");
         Button btn = new Button();
         btn.setText("+NEW");
@@ -75,6 +78,7 @@ public class Main extends Application {
         border.setTop(hbox);
         border.setLeft(addLeftNavigation());
         border.setCenter(addShuttleIconAsDefaultView());
+        border.setBottom(addNotificationBar());
         headingBar(hbox);         // Add stack to HBox in top region
 
         Scene mainScene = new Scene(border, 800, 500);
@@ -135,9 +139,9 @@ public class Main extends Application {
 
     public HBox addHBox() {
         HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);
-        hbox.setStyle("-fx-background-color: #0ca0b8;");
+        hbox.setPadding(new Insets(15, 12, 10, 12));
+        hbox.setSpacing(5);
+        hbox.setStyle("-fx-background-color: #27474e;");
 
         Button newHostButton = new Button("+ New Host");
         newHostButton.setPrefSize(100, 20);
@@ -156,13 +160,23 @@ public class Main extends Application {
         return hbox;
     }
 
+    public HBox addNotificationBar() {
+        HBox notificationBar = new HBox();
+        notificationBar.setPadding(new Insets(5, 2, 2, 5));
+        notificationBar.setStyle("-fx-background-color: #27474e;");
+        notification.getStyleClass().remove("label");
+        notification.getStyleClass().add("notification");
+        notificationBar.getChildren().add(notification);
+        return notificationBar;
+    }
+
     public VBox detailsVBox(GridPane grid) {
         VBox detailsBox = new VBox();
         detailsBox.setPadding(new Insets(30, 0, 0, 0));
         detailsBox.setSpacing(0);
 
         ScrollPane s1 = new ScrollPane();
-        s1.setPrefSize(510, 490); //set scrollpane width and height
+        s1.setPrefSize(600, 490); //set scrollpane width and height
         s1.setContent(grid);
         detailsBox.getChildren().add(s1);
 
@@ -219,7 +233,7 @@ public class Main extends Application {
         helpText.setFill(Color.WHITE);
         helpText.setStroke(Color.web("#7080A0"));
 
-        stack.getChildren().addAll(helpIcon, helpText);
+//        stack.getChildren().addAll(helpIcon, helpText);
         stack.setAlignment(Pos.CENTER_RIGHT);     // Right-justify nodes in stack
         StackPane.setMargin(helpText, new Insets(0, 10, 0, 0)); // Center "?"
 
@@ -232,7 +246,8 @@ public class Main extends Application {
         resetGlobals();
 
         GridPane grid = new GridPane();
-
+        // set style for the host details view pane
+        grid.setStyle("-fx-background-color: #1D2F33; -fx-min-width: 565;");
         // store existing local and remote forwards so that they can be combined with new edits
         Map<Integer, String> addLocalForwards = new HashMap<>();
         Map<Integer, String> addRemoteForwards = new HashMap<>();
@@ -244,7 +259,7 @@ public class Main extends Application {
         for (Host h : allHosts.getAllHosts()) {
             int rowToInsert = 1;
             if (h.getHostAlias().equals(hostAlias)) {
-                print(h.getHostName());
+                notification.setText("Showing details for " + h.getHostAlias());
 
                 // set currentHost as the validated host for this view
                 currentHost = h;
@@ -314,18 +329,6 @@ public class Main extends Application {
                 } catch (NullPointerException ex) {
                     System.out.println("One of the SSH Options was not set");
                 }
-
-                //manually set existing identityFile, forwardAgent and forwardX11 so that they are not
-                //overwritten by new edits.
-//                if (currentHost.getIdentityFile() != null && currentHost.getIdentityFile() != "") {
-//                    editableIdentityFileField.setText(currentHost.getIdentityFile());
-//                }
-//                if (currentHost.getForwardAgent() != null && currentHost.getForwardAgent() != "") {
-//                    editableForwardAgentField.setText(currentHost.getForwardAgent());
-//                }
-//                if (currentHost.getForwardX11() != null && currentHost.getForwardX11() != "") {
-//                    editableForwardX11Field.setText(currentHost.getForwardX11());
-//                }
             }
         }
 
@@ -382,9 +385,6 @@ public class Main extends Application {
                 }
             }
         });
-//                newHostEditSaveBtn.setOnAction(new EventHandler<ActionEvent>() {
-//                    @Override
-//                    public void handle(ActionEvent e) {
         newHostEditSaveBtn.setOnMousePressed(new EventHandler<MouseEvent>() {
             public void handle(MouseEvent me) {
                 for (Map.Entry<TextField, TextField> entry : tempMapLF.entrySet()) {
@@ -393,15 +393,9 @@ public class Main extends Application {
                 for (Map.Entry<TextField, TextField> entry : tempMapRF.entrySet()) {
                     addRemoteForwards.put(Integer.parseInt(entry.getKey().getText()), entry.getValue().getText());
                 }
-                System.out.println("EDITED =>" + editableHostField.getText());
-                System.out.println("EDITED =>" + editableIdentityFileField.getText());
-                System.out.println("EDITED =>" + editableForwardAgentField.getText());
-
 
                 // make sure otherOptions map contains edited/updated values
                 for (Map.Entry<String, TextField> entry : otherOptions.entrySet()) {
-                    print("Identity from OtherOptions ->" + entry.getValue().getText());
-                    print("Entry.getKey()->" + entry.getKey());
                     if (entry.getKey().equals("IdentityFile")) {
                         editableIdentityFileField.setText(entry.getValue().getText());
                         print("Identity Field inside the IF Statement => " + editableIdentityFileField.getText());
@@ -411,8 +405,6 @@ public class Main extends Application {
                         editableForwardX11Field.setText(entry.getValue().getText());
                     }
                 }
-                print(currentHost.getHostAlias());
-                print("IdentityFile Field==> " + editableIdentityFileField.getText());
                 setExistingHostProperties(currentHost,
                         currentHost.getHostAlias(),
                         editableHostField.getText().isEmpty() ? currentHost.getHostName() : editableHostField.getText().toString(),
@@ -428,7 +420,6 @@ public class Main extends Application {
                 reDrawHostNav();
             }
         });
-
 
         propertyBox.setPromptText("Add SSH Option");
 

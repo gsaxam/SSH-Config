@@ -1,11 +1,44 @@
-.text-field {
-    -fx-background-color: #1a8fab;
-    -fx-border-color: #fefffd;
-    -fx-text-inner-color: #FFF;
+.root {
+    -fx-font-size: 9pt;
+    -fx-font-family: "Monaco";
+    -fx-base: aqua;
+    -fx-background: rgb(29, 47, 51);
 }
+
+.text-field {
+    -fx-background-color: #444444;
+    -fx-border-color: #075b7c;
+    -fx-text-inner-color: #f89c0b;
+    -fx-min-width: 190;
+}
+
 .scroll-pane {
     -fx-background-insets: 0;
 
+}
+
+.list-cell {
+    -fx-padding: 3 3 3 3;
+    -fx-background-color: #2d4145;
+    -fx-text-fill: aqua;
+}
+
+.list-cell:selected {
+    -fx-background-color: #dd840b;
+    -fx-text-fill: white;
+}
+
+.list-cell:odd {
+    -fx-background-color: #354a4e;
+}
+
+.list-cell:selected {
+    -fx-background-color: #dd840b;
+    -fx-text-fill: white;
+}
+
+.scroll-bar:vertical {
+    -fx-background-color: #07354e;
 }
 
 .scroll-pane:focused {
@@ -15,16 +48,22 @@
 .scroll-pane .corner {
     -fx-background-insets: 0;
 }
+
 .label {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: #444444;
-    -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
+    -fx-text-fill: #dd840b;
     -fx-min-width: 120;
-    -fx-min-height: 29;
-    -fx-border-color: #acacac;
+    -fx-min-height: 25;
+    -fx-border-color: #076b8c;
     -fx-label-padding: 7;
 }
+
 .combo-box {
-    -fx-min-width: 170;
+    -fx-min-width: 180;
+}
+
+.notification {
+    -fx-font-size: 11px;
+    -fx-text-fill: #00a6a6;
 }
