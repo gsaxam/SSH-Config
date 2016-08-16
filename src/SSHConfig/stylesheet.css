@@ -1,8 +1,12 @@
 .root {
     -fx-font-size: 9pt;
     -fx-font-family: "Monaco";
-    -fx-base: aqua;
+    -fx-base: #07bcdc;
     -fx-background: rgb(29, 47, 51);
+}
+
+.text {
+    -fx-text-fill: #dd840b;
 }
 
 .text-field {
@@ -17,10 +21,22 @@
 
 }
 
-.list-cell {
-    -fx-padding: 3 3 3 3;
+.list-cell:even {
     -fx-background-color: #2d4145;
     -fx-text-fill: aqua;
+    -fx-cell-size: 2em;
+}
+
+.list-cell:odd {
+    -fx-cell-hover-color: #075b7c;
+    -fx-background-color: #354a4e;
+    -fx-text-fill: aqua;
+    -fx-cell-size: 2em;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: #783c0b;
+
 }
 
 .list-cell:selected {
@@ -28,12 +44,8 @@
     -fx-text-fill: white;
 }
 
-.list-cell:odd {
-    -fx-background-color: #354a4e;
-}
-
 .list-cell:selected {
-    -fx-background-color: #dd840b;
+    -fx-background-color: #ff7d38;
     -fx-text-fill: white;
 }
 
@@ -67,3 +79,18 @@
     -fx-font-size: 11px;
     -fx-text-fill: #00a6a6;
 }
+
+.combo-box .list-cell {
+    /*-fx-background: #076b8c;*/
+    -fx-background-color: #076b8c;
+    -fx-text-fill: white;
+    /*-fx-padding: 3 15 2 7;*/
+    -fx-cell-size: 2em;
+    -fx-cell-hover-color: #076b8c;
+    -fx-background-radius: 1
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: #ff7d38
+}
+

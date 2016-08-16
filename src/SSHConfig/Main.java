@@ -35,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main extends Application {
+    SSHConfig starter = new SSHConfig();
     Host currentHost = new Host(null, null, 0, null, null, null, null, null, null);
 
     // declare TextFields to retrieve updated values
@@ -104,7 +105,6 @@ public class Main extends Application {
     }
 
     public Config readConfig() throws IOException {
-        SSHConfig starter = new SSHConfig();
         starter.checkSSHConfig();
         String[] contents = starter.readFileIntoList();
 
@@ -155,6 +155,12 @@ public class Main extends Application {
 
         Button saveAllButton = new Button("Save All");
         saveAllButton.setPrefSize(100, 20);
+        saveAllButton.setOnMousePressed(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent me) {
+                String content = getConfigAsString();
+                starter.saveAllToFile(content);
+            }
+        });
         hbox.getChildren().addAll(newHostButton, saveAllButton);
 
         return hbox;
@@ -190,6 +196,7 @@ public class Main extends Application {
 
         Text title = new Text("HOSTS");
         title.setFont(Font.font("Optima", FontWeight.BOLD, 14));
+        title.setFill(Color.GOLD);
         hostList.getChildren().add(title);
 
         //list navigation start here
@@ -617,5 +624,33 @@ public class Main extends Application {
         editableIdentityFileField = new TextField();
         editableForwardAgentField = new TextField();
         editableForwardX11Field = new TextField();
+    }
+
+    public String getConfigAsString() {
+        String content = "";
+        String space = " ";
+        String tab = "    ";
+        String newline = "\n";
+        for (Host host : allHosts.getAllHosts()) {
+            content += "Host" + space + host.getHostAlias() + newline;
+            content += getConfigChildrenAsString("Hostname", host.getHostName());
+            content += getConfigChildrenAsString("User", host.getUser());
+            content += getConfigChildrenAsString("Port", "" + host.getPort());
+            content += getConfigChildrenAsString("IdentityFile", host.getIdentityFile());
+            content += getConfigChildrenAsString("ForwardAgent", host.getForwardAgent());
+            content += getConfigChildrenAsString("ForwardX11", host.getForwardX11());
+        }
+        return content;
+    }
+
+    public String getConfigChildrenAsString(String property, String propertyValue) {
+        String space = " ";
+        String tab = "    ";
+        String newline = "\n";
+        if (propertyValue != null || propertyValue != "" || propertyValue != "null") {
+            return tab + property + space + propertyValue + newline;
+        } else {
+            return "";
+        }
     }
 }
